@@ -11,13 +11,19 @@ ARG MEMORY_LIMIT=256M
 ARG POST_MAX_SIZE=16M
 ARG UPLOAD_MAX_FILESIZE=1024M
 
-ADD --chown=root:root scripts /etc/scripts
+# Download custom scripts that will be run after build or when run a new container of this image
+ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/check_extensions.sh "/etc/scripts"/check_extensions.sh
+ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/php.sh "/etc/scripts"/php.sh
+
+# Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
 ADD --chown=root:root https://download.moodle.org/stable401/moodle-4.1.2.tgz .
 ADD --chown=root:root https://download.moodle.org/stable401/moodle-4.1.2.tgz.md5 .
 ADD --chown=root:root https://download.moodle.org/stable401/moodle-4.1.2.tgz.sha256 .
 
-# Setup needed packages such as PHP, Nginx and another packages for general server handling
-# Wether user can use other moodle version, him can change ${VERSION} argument inside Dockerfile
+# To set up the server, you will need to install necessary packages such as PHP, Nginx, and other packages for general server handling.
+# If a user wants to use a different Moodle version, they can change the ${VERSION} argument inside the Dockerfile
+# See more: https://docs.moodle.org/401/en/Installation_quick_guide
+# See full installation guide: https://docs.moodle.org/401/en/Installing_Moodle
 RUN   apk update &&\
       apk add nginx openldap-dev php7 \
       php7-iconv \
@@ -58,8 +64,8 @@ RUN   chown -R root:root "/var/www/html/moodle" &&\
 
 # These scripts will check if all PHP extensions are enabled
 # and set up the php.ini file with available environment variables
-RUN   sh /etc/scripts/check_extensions.sh &&\
-      sh /etc/scripts/php.sh
+RUN   sh "/etc/scripts"/check_extensions.sh &&\
+      sh "/etc/scripts"/php.sh
 
 # Docker metadata contains information about the maintainer, such as the name, repository, and support email
 # Please add any necessary information or correct any incorrect information
