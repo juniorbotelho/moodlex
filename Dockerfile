@@ -12,8 +12,8 @@ ARG POST_MAX_SIZE=16M
 ARG UPLOAD_MAX_FILESIZE=1024M
 
 # Download custom scripts that will be run after build or when run a new container of this image
-ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/check_extensions.sh "/etc/scripts"/check_extensions.sh
-ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/php.sh "/etc/scripts"/php.sh
+ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/check_extensions.sh "/etc/scripts/check_extensions.sh"
+ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/php.sh "/etc/scripts/php.sh"
 
 # Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
 ADD --chown=root:root https://download.moodle.org/stable401/moodle-4.1.2.tgz .
@@ -50,8 +50,8 @@ RUN   apk update &&\
       php7-fpm --no-cache --repository="http://dl-cdn.alpinelinux.org/alpine/edge/testing" &&\
       # By running these commands, you can ensure that the downloaded file
       # has not been corrupted or tampered with during the download process.
-      md5sum -c "moodle-4.1.2.tgz.md5" &&\
-      sha256sum -c "moodle-4.1.2.tgz.sha256" &&\
+      echo "$(grep -oE '[0-9a-f]{32}' moodle-4.1.2.tgz.md5)  moodle-4.1.2.tgz" | md5sum -c - &&\
+      echo "$(grep -oE '[0-9a-f]{64}' moodle-4.1.2.tgz.sha256)  moodle-4.1.2.tgz" | sha256sum -c - &&\
       tar -xvzf "moodle-4.1.2.tgz" &&\
       rm -rf "moodle-4.1.2.tgz" &&\
       mkdir "/home/moodledata"
@@ -60,12 +60,14 @@ RUN   apk update &&\
 # installation directory and moodledata directory.
 RUN   chown -R root:root "/var/www/html/moodle" &&\
       chmod -R 0755 "/var/www/html/moodle" &&\
-      chmod -R 0755 "/home/moodledata"
+      chmod -R 0755 "/home/moodledata" &&\
+      chmod +x "/etc/scripts/check_extensions.sh" &&\
+      chmod +x "/etc/scripts/php.sh"
 
 # These scripts will check if all PHP extensions are enabled
 # and set up the php.ini file with available environment variables
-RUN   sh "/etc/scripts"/check_extensions.sh &&\
-      sh "/etc/scripts"/php.sh
+RUN   sh "/etc/scripts/check_extensions.sh" &&\
+      sh "/etc/scripts/php.sh"
 
 # Docker metadata contains information about the maintainer, such as the name, repository, and support email
 # Please add any necessary information or correct any incorrect information
