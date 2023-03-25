@@ -3,12 +3,6 @@ ARG ALPINE_VERSION=3.17
 FROM docker.io/alpine:${ALPINE_VERSION} as Moodle
 WORKDIR "/var/www/html"
 
-# Customize the environment during both execution and build time by modifying the environment variables added to the container's shell
-# When building your image, make sure to set the 'TZ' environment variable to your desired time zone location, for example 'America/Sao_Paulo'
-# See more: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
-ARG TZ="America/Sao_Paulo"
-ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
-
 # To set up the server, you will need to install necessary packages such as PHP, Nginx, and other packages for general server handling.
 # If a user wants to use a different Moodle version, they can change the ${VERSION} argument inside the Dockerfile
 # See more: https://docs.moodle.org/401/en/Installation_quick_guide
@@ -16,6 +10,11 @@ ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
 RUN apk update &&\
     apk add nginx openldap-dev \
     php7 \
+    php7-xmlreader \
+    php7-fileinfo \
+    php7-sodium \
+    php7-exif \
+    php7-opcache \
     php7-iconv \
     php7-mbstring \
     php7-curl \
@@ -39,6 +38,12 @@ RUN apk update &&\
     php7-sockets \
     php7-fpm --no-cache --repository="http://dl-cdn.alpinelinux.org/alpine/edge/testing"
 
+# Customize the environment during both execution and build time by modifying the environment variables added to the container's shell
+# When building your image, make sure to set the 'TZ' environment variable to your desired time zone location, for example 'America/Sao_Paulo'
+# See more: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
+ARG TZ="America/Sao_Paulo"
+ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
+
 ENV SCRIPT_PATH="/etc/scripts"
 ENV PHP_SOCKET_CONF="/etc/php7/php-fpm.d/www.conf"
 ENV PHP_MEMORY_LIMIT=256M
@@ -46,11 +51,11 @@ ENV PHP_POST_MAX_SIZE=16M
 ENV PHP_UPLOAD_MAX_FILESIZE=1024M
 
 # Download custom scripts that will be run after build or when run a new container of this image
-ADD --chown=root:root scripts/check_extensions.sh "${SCRIPT_PATH}/check_extensions.sh"
-ADD --chown=root:root scripts/configure_socket.sh "${SCRIPT_PATH}/configure_socket.sh"
-ADD --chown=root:root scripts/entrypoint.sh "${SCRIPT_PATH}/entrypoint.sh"
-ADD --chown=root:root scripts/extract_moodle.sh "${SCRIPT_PATH}/extract_moodle.sh"
-ADD --chown=root:root scripts/php.sh "${SCRIPT_PATH}/php.sh"
+ADD --chown=root:root ${GITHUB_RAW}/scripts/check_extensions.sh "${SCRIPT_PATH}/check_extensions.sh"
+ADD --chown=root:root ${GITHUB_RAW}/scripts/configure_socket.sh "${SCRIPT_PATH}/configure_socket.sh"
+ADD --chown=root:root ${GITHUB_RAW}/scripts/entrypoint.sh "${SCRIPT_PATH}/entrypoint.sh"
+ADD --chown=root:root ${GITHUB_RAW}/scripts/extract_moodle.sh "${SCRIPT_PATH}/extract_moodle.sh"
+ADD --chown=root:root ${GITHUB_RAW}/scripts/php.sh "${SCRIPT_PATH}/php.sh"
 # Downloading nginx configuration files and fastcgi to PHP handling
 ADD --chown=root:root ${GITHUB_RAW}/etc/fastcgi.conf "/etc/nginx/fastcgi.conf"
 ADD --chown=root:root ${GITHUB_RAW}/etc/nginx.conf "/etc/nginx/http.d/moodle.conf"
@@ -64,7 +69,16 @@ ADD --chown=root:root https://download.moodle.org/stable401/moodle-4.1.2.tgz.sha
 # has not been corrupted or tampered with during the download process.
 RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-4.1.2.tgz.md5)  moodle-4.1.2.tgz" | md5sum -c - &&\
     echo "$(grep -oE '[0-9a-f]{64}' moodle-4.1.2.tgz.sha256)  moodle-4.1.2.tgz" | sha256sum -c - &&\
-    mkdir "/var/www/html/{moodle,moodledata}"
+    # Secure the Moodle files: It is vital that the files are not writeable by the web server user. For example, on Unix/Linux (as root):
+    mkdir "/var/www/html/moodle" &&\
+    chown -R root "/var/www/html/moodle" &&\
+    chmod -R 0755 "/var/www/html/moodle" &&\
+    # IMPORTANT: This directory must NOT be accessible directly via the web. This would be a serious security hole.
+    # Do not try to place it inside your web root or inside your Moodle program files directory.
+    # Moodle will not install. It can go anywhere else convenient.
+    # See more: https://docs.moodle.org/401/en/Installing_Moodle
+    mkdir "/var/www/html/moodledata" &&\
+    chmod -R 0777 "/var/www/html/moodledata"
 
 # This block changes the ownership and permissions of the Moodle
 # installation directory and moodledata directory.
