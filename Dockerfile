@@ -52,11 +52,11 @@ ENV PHP_POST_MAX_SIZE=16M
 ENV PHP_UPLOAD_MAX_FILESIZE=1024M
 
 # Download custom scripts that will be run after build or when run a new container of this image
-ADD --chown=root:root ${GITHUB_RAW}/scripts/check_extensions.sh "${SCRIPT_PATH}/check_extensions.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/configure_socket.sh "${SCRIPT_PATH}/configure_socket.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/entrypoint.sh "${SCRIPT_PATH}/entrypoint.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/extract_moodle.sh "${SCRIPT_PATH}/extract_moodle.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/php_config.sh "${SCRIPT_PATH}/php_config.sh"
+ADD --chown=root:root scripts/check_extensions.sh "${SCRIPT_PATH}/check_extensions.sh"
+ADD --chown=root:root scripts/php_config.sh "${SCRIPT_PATH}/php_config.sh"
+ADD --chown=root:root scripts/configure_socket.sh "${SCRIPT_PATH}/configure_socket.sh"
+ADD --chown=root:root scripts/extract_moodle.sh "${SCRIPT_PATH}/extract_moodle.sh"
+ADD --chown=root:root scripts/entrypoint.sh "${SCRIPT_PATH}/entrypoint.sh"
 # Downloading nginx configuration files and fastcgi to PHP handling
 ADD --chown=root:root ${GITHUB_RAW}/etc/fastcgi.conf "/etc/nginx/fastcgi.conf"
 ADD --chown=root:root ${GITHUB_RAW}/etc/nginx.conf "/etc/nginx/http.d/moodle.conf"
@@ -73,16 +73,18 @@ RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-40
     # This scope changes the ownership and permissions of the Moodle
     # installation directory and moodledata directory.
     chmod +x "${SCRIPT_PATH}/check_extensions.sh" &&\
-    chmod +x "${SCRIPT_PATH}/configure_socket.sh" &&\
-    chmod +x "${SCRIPT_PATH}/entrypoint.sh" &&\
-    chmod +x "${SCRIPT_PATH}/extract_moodle.sh" &&\
     chmod +x "${SCRIPT_PATH}/php_config.sh" &&\
+    chmod +x "${SCRIPT_PATH}/configure_socket.sh" &&\
+    chmod +x "${SCRIPT_PATH}/extract_moodle.sh" &&\
+    chmod +x "${SCRIPT_PATH}/entrypoint.sh" &&\
     # These scripts will check if all PHP extensions are enabled
     # and set up the php.ini file with available environment variables
     sh -c ${SCRIPT_PATH}/check_extensions.sh &&\
     sh -c ${SCRIPT_PATH}/php_config.sh &&\
-    sh -c ${SCRIPT_PATH}/configure_socket &&\
+    sh -c ${SCRIPT_PATH}/configure_socket.sh &&\
     sh -c ${SCRIPT_PATH}/extract_moodle.sh &&\
+    # Delete unnecessary tarball and their checksum files
+    rm -rf "/var/www/html/moodle-*.tgz*" &&\
     # Secure the Moodle files: It is vital that the files are not writeable by the web server user. For example, on Unix/Linux (as root):
     chown -R root:root "/var/www/html/moodle" &&\
     chmod -R 755 "/var/www/html/moodle" &&\
