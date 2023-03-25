@@ -7,7 +7,6 @@ extensions="
   fileinfo
   sodium
   exif
-  opcache
   iconv
   mbstring
   curl
