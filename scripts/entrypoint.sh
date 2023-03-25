@@ -1,4 +1,10 @@
 #!/bin/sh
 
-exec /bin/sh -c /usr/sbin/php-fpm7
-exec nginx -g "daemon off;"
+export PATH="/usr/sbin:$PATH"
+
+./configure_socket.sh
+./check_extensions.sh
+./extract_moodle.sh
+
+exec sh php-fpm7 &&\
+     nginx -g "daemon off;"

@@ -8,3 +8,6 @@
 *.log
 *.log.*
 *.sig
+
+# Temp folder
+/tmp
