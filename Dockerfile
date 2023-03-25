@@ -7,6 +7,7 @@ WORKDIR "/var/www/html"
 # When building your image, make sure to set the 'TZ' environment variable to your desired time zone location, for example 'America/Sao_Paulo'
 # See more: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
 ARG TZ="America/New_York"
+ARG WWW_CONFIG="/etc/php7/php-fpm.d/www.conf"
 ARG MEMORY_LIMIT=256M
 ARG POST_MAX_SIZE=16M
 ARG UPLOAD_MAX_FILESIZE=1024M
@@ -14,6 +15,10 @@ ARG UPLOAD_MAX_FILESIZE=1024M
 # Download custom scripts that will be run after build or when run a new container of this image
 ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/check_extensions.sh "/etc/scripts/check_extensions.sh"
 ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/php.sh "/etc/scripts/php.sh"
+ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/configure_socket.sh "/etc/scripts/configure_socket.sh"
+ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/scripts/entrypoint.sh "/etc/scripts/entrypoint.sh"
+ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/config/fastcgi.conf "/etc/nginx/fastcgi.conf"
+ADD --chown=root:root https://raw.githubusercontent.com/juniorbotelho/moodle/main/config/nginx.conf "/etc/nginx/http.d/moodle.conf"
 
 # Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
 ADD --chown=root:root https://download.moodle.org/stable401/moodle-4.1.2.tgz .
@@ -25,7 +30,8 @@ ADD --chown=root:root https://download.moodle.org/stable401/moodle-4.1.2.tgz.sha
 # See more: https://docs.moodle.org/401/en/Installation_quick_guide
 # See full installation guide: https://docs.moodle.org/401/en/Installing_Moodle
 RUN   apk update &&\
-      apk add nginx openldap-dev php7 \
+      apk add nginx openldap-dev \
+      php7 \
       php7-iconv \
       php7-mbstring \
       php7-curl \
@@ -53,7 +59,7 @@ RUN   apk update &&\
       echo "$(grep -oE '[0-9a-f]{32}' moodle-4.1.2.tgz.md5)  moodle-4.1.2.tgz" | md5sum -c - &&\
       echo "$(grep -oE '[0-9a-f]{64}' moodle-4.1.2.tgz.sha256)  moodle-4.1.2.tgz" | sha256sum -c - &&\
       tar -xvzf "moodle-4.1.2.tgz" &&\
-      rm -rf "moodle-4.1.2.tgz" &&\
+      rm -rf "moodle-4.1.2.*" &&\
       mkdir "/home/moodledata"
 
 # This block changes the ownership and permissions of the Moodle
@@ -61,13 +67,26 @@ RUN   apk update &&\
 RUN   chown -R root:root "/var/www/html/moodle" &&\
       chmod -R 0755 "/var/www/html/moodle" &&\
       chmod -R 0755 "/home/moodledata" &&\
+      chmod +x "/etc/scripts/entrypoint.sh" &&\
+      chmod +x "/etc/scripts/configure_socket.sh" &&\
       chmod +x "/etc/scripts/check_extensions.sh" &&\
       chmod +x "/etc/scripts/php.sh"
 
+# Configure PHP-FPM to listen on a Unix socket instead of a TCP port, which is more secure and efficient
+RUN sed -i 's/^\s*listen = 127.0.0.1:9000/listen = \/run\/php7\/php-fpm7.sock/' ${WWW_CONFIG} &&\
+    sed -i 's/^\s*;\s*listen.owner = nobody/listen.owner = nginx/' ${WWW_CONFIG} &&\
+    sed -i 's/^\s*;\s*listen.group = nobody/listen.group = nginx/' ${WWW_CONFIG} &&\
+    sed -i 's/^\s*;\s*listen.mode = 0660/listen.mode = 0660/' ${WWW_CONFIG}
+
 # These scripts will check if all PHP extensions are enabled
 # and set up the php.ini file with available environment variables
-RUN   sh "/etc/scripts/check_extensions.sh" &&\
-      sh "/etc/scripts/php.sh"
+RUN sh "/etc/scripts/check_extensions.sh" &&\
+    sh "/etc/scripts/configure_socket.sh" &&\
+    sh "/etc/scripts/php.sh"
+
+# Forward request and error logs to docker log collector
+RUN ln -sf /dev/stdout /var/log/nginx/access.log &&\
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Docker metadata contains information about the maintainer, such as the name, repository, and support email
 # Please add any necessary information or correct any incorrect information
@@ -80,3 +99,5 @@ LABEL name="Moodle" \
       url="https://github.com/juniorbotelho/moodle" \
       usage="https://github.com/juniorbotelho/moodle/wiki" \
       authors="https://github.com/juniorbotelho/moodle/contributors"
+
+ENTRYPOINT [ "/bin/sh", "-c", "/etc/scripts/entrypoint.sh" ]
