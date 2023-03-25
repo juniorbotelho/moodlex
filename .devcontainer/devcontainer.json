@@ -19,7 +19,8 @@
 			"extensions": [
 				"HashiCorp.terraform",
 				"ms-azuretools.vscode-docker",
-				"xdebug.php-pack"
+				"xdebug.php-pack",
+				"bierner.markdown-preview-github-styles"
 			]
 		}
 	}
