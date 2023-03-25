@@ -84,7 +84,7 @@ RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-40
     sh -c ${SCRIPT_PATH}/configure_socket.sh &&\
     sh -c ${SCRIPT_PATH}/extract_moodle.sh &&\
     # Delete unnecessary tarball and their checksum files
-    rm -rf "/var/www/html/moodle-*.tgz*" &&\
+    rm -rf "/var/www/html/moodle-*" &&\
     # Secure the Moodle files: It is vital that the files are not writeable by the web server user. For example, on Unix/Linux (as root):
     chown -R root:root "/var/www/html/moodle" &&\
     chmod -R 755 "/var/www/html/moodle" &&\
