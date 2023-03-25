@@ -46,11 +46,11 @@ ENV PHP_POST_MAX_SIZE=16M
 ENV PHP_UPLOAD_MAX_FILESIZE=1024M
 
 # Download custom scripts that will be run after build or when run a new container of this image
-ADD --chown=root:root ${GITHUB_RAW}/scripts/check_extensions.sh "${SCRIPT_PATH}/check_extensions.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/configure_socket.sh "${SCRIPT_PATH}/configure_socket.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/entrypoint.sh "${SCRIPT_PATH}/entrypoint.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/extract_moodle.sh "${SCRIPT_PATH}/extract_moodle.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/php.sh "${SCRIPT_PATH}/php.sh"
+ADD --chown=root:root scripts/check_extensions.sh "${SCRIPT_PATH}/check_extensions.sh"
+ADD --chown=root:root scripts/configure_socket.sh "${SCRIPT_PATH}/configure_socket.sh"
+ADD --chown=root:root scripts/entrypoint.sh "${SCRIPT_PATH}/entrypoint.sh"
+ADD --chown=root:root scripts/extract_moodle.sh "${SCRIPT_PATH}/extract_moodle.sh"
+ADD --chown=root:root scripts/php.sh "${SCRIPT_PATH}/php.sh"
 # Downloading nginx configuration files and fastcgi to PHP handling
 ADD --chown=root:root ${GITHUB_RAW}/etc/fastcgi.conf "/etc/nginx/fastcgi.conf"
 ADD --chown=root:root ${GITHUB_RAW}/etc/nginx.conf "/etc/nginx/http.d/moodle.conf"
