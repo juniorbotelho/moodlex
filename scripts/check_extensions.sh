@@ -2,6 +2,12 @@
 
 # List of extensions to validate
 extensions="
+  session
+  xmlreader
+  fileinfo
+  sodium
+  exif
+  opcache
   iconv
   mbstring
   curl
