@@ -1,10 +1,11 @@
 #!/bin/sh
 
-export PATH="/usr/sbin:$PATH"
+PHP_BIN="/usr/sbin"
+SCRIPT_PATH="/etc/scripts"
 
-./configure_socket.sh
-./check_extensions.sh
-./extract_moodle.sh
+sh ${SCRIPT_PATH}/configure_socket.sh
+sh ${SCRIPT_PATH}/check_extensions.sh
+sh ${SCRIPT_PATH}/extract_moodle.sh
 
-exec sh php-fpm7 &&\
+exec sh ${PHP_BIN}/php-fpm7 &&\
      nginx -g "daemon off;"
