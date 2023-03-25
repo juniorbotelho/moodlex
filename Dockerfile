@@ -39,6 +39,8 @@ RUN apk update &&\
     php7-sockets \
     php7-fpm --no-cache --repository="http://dl-cdn.alpinelinux.org/alpine/edge/testing"
 
+RUN apk add vim --no-cache
+
 # Customize the environment during both execution and build time by modifying the environment variables added to the container's shell
 # When building your image, make sure to set the 'TZ' environment variable to your desired time zone location, for example 'America/Sao_Paulo'
 # See more: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
@@ -46,7 +48,7 @@ ARG TZ="America/Sao_Paulo"
 ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
 
 ENV SCRIPT_PATH="/etc/scripts"
-ENV PHP_SOCKET_CONF="/etc/php7/php-fpm.d/www.conf"
+ENV PHP_SOCKET_PATH="/etc/php7/php-fpm.d/www.conf"
 ENV PHP_MEMORY_LIMIT=256M
 ENV PHP_POST_MAX_SIZE=16M
 ENV PHP_UPLOAD_MAX_FILESIZE=1024M
@@ -84,9 +86,9 @@ RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-40
     sh -c ${SCRIPT_PATH}/configure_socket.sh &&\
     sh -c ${SCRIPT_PATH}/extract_moodle.sh &&\
     # Delete unnecessary tarball and their checksum files
-    rm -rf "/var/www/html/moodle-*" &&\
+    rm -rf "/var/www/html/{moodle-latest-401.tgz,moodle-latest-401.tgz.md5,moodle-latest-401.tgz.sha256}" &&\
     # Secure the Moodle files: It is vital that the files are not writeable by the web server user. For example, on Unix/Linux (as root):
-    chown -R root:root "/var/www/html/moodle" &&\
+    chown -R nginx:nginx "/var/www/html/moodle" &&\
     chmod -R 755 "/var/www/html/moodle" &&\
     # IMPORTANT: This directory must NOT be accessible directly via the web. This would be a serious security hole.
     # Do not try to place it inside your web root or inside your Moodle program files directory.
@@ -94,13 +96,14 @@ RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-40
     # See more: https://docs.moodle.org/401/en/Installing_Moodle
     mkdir "/var/www/html/moodledata" &&\
     chown -R nginx:nginx "/var/www/html/moodledata" &&\
-    chmod -R 700 "/var/www/html/moodledata"
+    chmod -R 775 "/var/www/html/moodledata"
 
 # Configure PHP-FPM to listen on a Unix socket instead of a TCP port, which is more secure and efficient
-RUN sed -i 's/^\s*listen = 127.0.0.1:9000/listen = \/run\/php7\/php-fpm7.sock/' ${PHP_SOCKET_CONF} &&\
-    sed -i 's/^\s*;\s*listen.owner = nobody/listen.owner = nginx/' ${PHP_SOCKET_CONF} &&\
-    sed -i 's/^\s*;\s*listen.group = nobody/listen.group = nginx/' ${PHP_SOCKET_CONF} &&\
-    sed -i 's/^\s*;\s*listen.mode = 0660/listen.mode = 0660/' ${PHP_SOCKET_CONF}
+RUN sed -i 's/^\s*listen = .*/listen = \/run\/php7\/php-fpm7.sock/' ${PHP_SOCKET_PATH} &&\
+    sed -i 's/^\s*;\s*listen.owner = .*/listen.owner = nginx/' ${PHP_SOCKET_PATH} &&\
+    sed -i 's/^\s*;\s*listen.group = .*/listen.group = nginx/' ${PHP_SOCKET_PATH} &&\
+    sed -i 's/^\s*;\s*listen.mode = .*/listen.mode = 0660/' ${PHP_SOCKET_PATH} &&\
+    sed -i 's/^\s*;\s*security.limit_extensions = .*/security.limit_extensions = .php/' ${PHP_SOCKET_PATH}
 
 # Forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log &&\
