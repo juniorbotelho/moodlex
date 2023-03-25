@@ -27,7 +27,7 @@ extensions="
 
 # Loop through the extensions and validate if they are enabled
 for ext in $extensions; do
-  if ! php -m | grep -i -q "^$ext$"; then
+  if ! php7 -m | grep -i -q "^$ext$"; then
     echo "[Error]: Extension $ext is not enabled"
     exit 1
   fi
