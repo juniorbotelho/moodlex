@@ -8,6 +8,9 @@ services:
     environment:
       TZ: America/Sao_Paulo
     restart: unless-stopped
+    volumes:
+      - ./tmp/nginx:/var/log/nginx
+      - ./tmp/php:/var/log/php7
     depends_on:
       - db
 
