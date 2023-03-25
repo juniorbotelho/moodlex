@@ -20,7 +20,7 @@ services:
     environment:
       POSTGRES_DB: moodle
       POSTGRES_USER: moodleuser
-      POSTGRES_PASSWORD: byu2cxk8CEX9amu@teq
+      POSTGRES_PASSWORD: moodlepw
 
   adminer:
     image: adminer
