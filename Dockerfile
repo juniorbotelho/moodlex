@@ -68,8 +68,8 @@ ADD --chown=root:root https://download.moodle.org/stable401/moodle-latest-401.tg
 
 # By running these commands, you can ensure that the downloaded file
 # has not been corrupted or tampered with during the download process.
-RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-4.1.2.tgz.md5)  moodle-4.1.2.tgz" | md5sum -c - &&\
-    echo "$(grep -oE '[0-9a-f]{64}' moodle-4.1.2.tgz.sha256)  moodle-4.1.2.tgz" | sha256sum -c - &&\
+RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-401.tgz" | md5sum -c - &&\
+    echo "$(grep -oE '[0-9a-f]{64}' moodle-latest-401.tgz.sha256)  moodle-latest-401.tgz" | sha256sum -c - &&\
     # This scope changes the ownership and permissions of the Moodle
     # installation directory and moodledata directory.
     chmod +x "${SCRIPT_PATH}/check_extensions.sh" &&\

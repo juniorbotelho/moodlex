@@ -2,7 +2,7 @@
 
 PATH="/var/www/html"
 
-/bin/tar -xvzf "${PATH}/moodle-4.1.2.tgz"
+/bin/tar -xvzf "${PATH}/moodle-latest-401.tgz"
 /bin/rm -rf "${PATH}/moodle-*.tgz*"
 
 # Secure the Moodle files: It is vital that the files are not writeable by the web server user. For example, on Unix/Linux (as root):
