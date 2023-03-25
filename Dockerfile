@@ -10,6 +10,7 @@ WORKDIR "/var/www/html"
 RUN apk update &&\
     apk add nginx openldap-dev \
     php7 \
+    php7-session \
     php7-xmlreader \
     php7-fileinfo \
     php7-sodium \
