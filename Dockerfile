@@ -8,6 +8,8 @@ WORKDIR "/var/www"
 # See more: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
 ARG TZ="America/Sao_Paulo"
 ARG HTTP_PROXY=""
+ARG SCRIPT_PATH="/etc/scripts"
+ARG PHP_SOCKET_PATH="/etc/php7/php-fpm.d/www.conf"
 ARG ALPINE_REPOSITORY="http://dl-cdn.alpinelinux.org/alpine/edge/testing"
 ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
 
@@ -20,6 +22,7 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     apk update --no-cache &&\
     apk add \
     vim \
+    su-exec \
     nginx \
     openldap-dev \
     php7 \
@@ -52,13 +55,29 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     php7-sockets \
     php7-fpm --no-cache --repository="${ALPINE_REPOSITORY}"
 
-ENV SCRIPT_PATH="/etc/scripts"
-ENV PHP_SOCKET_PATH="/etc/php7/php-fpm.d/www.conf"
+ENV HTTP_PROXY=""
 ENV PHP_MEMORY_LIMIT=256M
 ENV PHP_POST_MAX_SIZE=16M
 ENV PHP_UPLOAD_MAX_FILESIZE=1024M
 
+# Moodle runtime environment variables
+ENV MOODLE_LANG=""
+ENV MOODLE_WWW=""
+ENV MOODLE_DATADIR=""
+ENV MOODLE_DB_TYPE=""
+ENV MOODLE_DB_HOST=""
+ENV MOODLE_DB_NAME=""
+ENV MOODLE_DB_USER=""
+ENV MOODLE_DB_PASSWORD=""
+ENV MOODLE_SITE_FULLNAME=""
+ENV MOODLE_SITE_SHORTNAME=""
+ENV MOODLE_ADMIN_USER=""
+ENV MOODLE_ADMIN_PASSWORD=""
+ENV MOODLE_ADMIN_EMAIL=""
+ENV MOODLE_SUPPORT_EMAIL=""
+
 # Download custom scripts that will be run after build or when run a new container of this image
+ADD --chown=root:root ${GITHUB_RAW}/scripts/admin-install.sh "${SCRIPT_PATH}/admin-install.sh"
 ADD --chown=root:root ${GITHUB_RAW}/scripts/check_extensions.sh "${SCRIPT_PATH}/check_extensions.sh"
 ADD --chown=root:root ${GITHUB_RAW}/scripts/php_config.sh "${SCRIPT_PATH}/php_config.sh"
 ADD --chown=root:root ${GITHUB_RAW}/scripts/configure_socket.sh "${SCRIPT_PATH}/configure_socket.sh"
@@ -103,11 +122,13 @@ RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-40
     chown -R nginx:nginx "/var/www/moodledata" &&\
     chmod -R 0775 "/var/www/moodledata" &&\
     find "/var/www/moodledata" -type f -exec chmod 0664 {} \; &&\
-    php7 "/var/www/moodle/install.php"
+    # Delete unnecessary scripts, tarballs and their checksum files
+    rm -rf /var/www/moodle-latest-*
 
 # Override max post limit in nginx
-RUN sed -i 's/user .*/user nginx nginx;/' /etc/nginx/nginx.conf &&\
-    sed -i 's/client_max_body_size .*/client_max_body_size 1024M;/' /etc/nginx/nginx.conf
+RUN sed -i 's/user nginx/user nginx nginx/' /etc/nginx/nginx.conf &&\
+    sed -i 's/client_max_body_size .*/client_max_body_size 1024m;/' /etc/nginx/nginx.conf &&\
+    nginx -t
 
 # Configure PHP-FPM to listen on a Unix socket instead of a TCP port, which is more secure and efficient
 RUN sed -i 's/^\s*user = .*/user = nginx/' ${PHP_SOCKET_PATH} &&\
@@ -116,10 +137,8 @@ RUN sed -i 's/^\s*user = .*/user = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.owner = .*/listen.owner = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.group = .*/listen.group = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.mode = .*/listen.mode = 0660/' ${PHP_SOCKET_PATH} &&\
-    sed -i 's/^\s*;\s*security.limit_extensions = .*/security.limit_extensions = .php/' ${PHP_SOCKET_PATH}
-
-# Delete unnecessary tarball and their checksum files
-RUN rm -rf /var/www/moodle-latest-*
+    sed -i 's/^\s*;\s*security.limit_extensions = .*/security.limit_extensions = .php/' ${PHP_SOCKET_PATH} &&\
+    php-fpm7 -tt
 
 # Forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log &&\
