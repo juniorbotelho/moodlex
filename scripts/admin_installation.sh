@@ -3,9 +3,7 @@ export PATH="/bin:$PATH"
 export http_proxy=${HTTP_PROXY}
 export https_proxy=${HTTP_PROXY}
 
-READY_FILE=$(cat moodle/config.php | grep -c "xsendfile = 'X-Accel-Redirect'")
-
-if [ ! -f /tmp/foo.txt ] || [ $READY_FILE -eq 0 ]; then
+if [ ! -f /moodle/config.php ] || [ cat moodle/config.php | grep -c "xsendfile = 'X-Accel-Redirect'" -eq 0 ]; then
 sleep 10
   # See more: https://docs.moodle.org/401/en/Administration_via_command_line#Installation
   exec su-exec nginx php7 moodle/admin/cli/install.php \
