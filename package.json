@@ -1,0 +1,8 @@
+{
+  "name": "moodle",
+  "version": "1.0.0",
+  "description": "Docker and infra configuration files for hosting the moodle application on cloud providers.",
+  "keywords": ["docker", "terraform", "moodle"],
+  "author": "juniorbotelho<https://github.com/juniorbotelho>",
+  "license": "AGPL"
+}
