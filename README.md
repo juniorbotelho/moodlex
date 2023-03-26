@@ -1,3 +1,4 @@
 ```sh
-docker build -t moodle:${MOODLE_VERSION:-"latest"} --build-arg TZ=America/Sao_Paulo .
+docker build -t moodle:${MOODLE_VERSION:-"latest"} --build-arg HTTP_PROXY=${HTTP_PROXY} .
 ```
+
