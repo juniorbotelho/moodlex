@@ -7,30 +7,30 @@ services:
       - 8080:8080
     environment:
       TZ: America/Sao_Paulo
+      # HTTP_PROXY: http://192.168.237.15:44355
       # Moodle environment variables
       MOODLE_LANG: pt_br
-      MOODLE_DB_TYPE: pgsql
+      MOODLE_DB_TYPE: mysqli
       MOODLE_DB_HOST: db
       MOODLE_DB_NAME: moodle
       MOODLE_DB_USER: moodleuser
       MOODLE_DB_PASSWORD: moodlepw
-      MOODLE_SITE_FULLNAME: "Codans Oficial"
+      MOODLE_SITE_FULLNAME: Codans
       MOODLE_SITE_SHORTNAME: Codans
       MOODLE_ADMIN_USER: juniorbotelho
       MOODLE_ADMIN_PASSWORD: nirvana-blew-boddah
       MOODLE_ADMIN_EMAIL: admin@codans.com.br
       MOODLE_SUPPORT_EMAIL: suporte@codans.com.br
     restart: unless-stopped
-    volumes:
-      - ./tmp/nginx:/var/log/nginx
-      - ./tmp/php:/var/log/php7
     depends_on:
       - db
 
   db:
-    image: postgres
+    image: mysql:8.0.32
+    command: --default-authentication-plugin=mysql_native_password
     restart: always
     environment:
-      POSTGRES_DB: moodle
-      POSTGRES_USER: moodleuser
-      POSTGRES_PASSWORD: moodlepw
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+      MYSQL_DATABASE: moodle
+      MYSQL_USER: moodleuser
+      MYSQL_PASSWORD: moodlepw

@@ -20,6 +20,7 @@ exec su-exec nginx php7 moodle/admin/cli/install.php \
   --adminemail=${MOODLE_ADMIN_EMAIL:-"admin@localhost.local"} \
   --supportemail=${MOODLE_SUPPORT_EMAIL:-"support@localhost.local"} \
   --non-interactive \
+  --skip-database \
   --agree-license &&\
   # finally, merge needed configurations inside the new config.php file
   su-exec nginx echo $(cat /tmp/config.php) > moodle/config.php
