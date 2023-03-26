@@ -11,16 +11,17 @@ ARG HTTP_PROXY=""
 ARG ALPINE_REPOSITORY="http://dl-cdn.alpinelinux.org/alpine/edge/testing"
 ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
 
-# Update package source list
-RUN apk update &&\
-    apk update --repository="${ALPINE_REPOSITORY}" &&\
-    apk add vim nginx openldap-dev --no-cache
-
 # To set up the server, you will need to install necessary packages such as PHP, Nginx, and other packages for general server handling.
 # If a user wants to use a different Moodle version, they can change the ${VERSION} argument inside the Dockerfile
 # See more: https://docs.moodle.org/401/en/Installation_quick_guide
 # See full installation guide: https://docs.moodle.org/401/en/Installing_Moodle
-RUN apk add \
+RUN export http_proxy=${HTTP_PROXY} &&\
+    export https_proxy=${HTTP_PROXY} &&\
+    apk update --no-cache &&\
+    apk add \
+    vim \
+    nginx \
+    openldap-dev \
     php7 \
     php7-session \
     php7-xmlreader \
@@ -105,7 +106,7 @@ RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-40
     php7 "/var/www/moodle/install.php"
 
 # Override max post limit in nginx
-RUN sed -i 's/client_max_body_size = .*/s/client_max_body_size = 1024M;/' /etc/nginx/nginx.conf
+RUN sed -i 's/client_max_body_size = .*/client_max_body_size = 1024M;/' /etc/nginx/nginx.conf
 
 # Configure PHP-FPM to listen on a Unix socket instead of a TCP port, which is more secure and efficient
 RUN sed -i 's/^\s*listen = .*/listen = \/run\/php7\/php-fpm7.sock/' ${PHP_SOCKET_PATH} &&\
