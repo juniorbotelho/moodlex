@@ -76,6 +76,11 @@ ENV MOODLE_ADMIN_PASSWORD=""
 ENV MOODLE_ADMIN_EMAIL=""
 ENV MOODLE_SUPPORT_EMAIL=""
 
+# Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
+ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz .
+ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.md5 .
+ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.sha256 .
+
 # Download custom scripts that will be run after build or when run a new container of this image
 ADD --chown=root:root ${GITHUB_RAW}/scripts/admin_installation.sh "${SCRIPT_PATH}/admin_installation.sh"
 ADD --chown=root:root ${GITHUB_RAW}/scripts/check_extensions.sh "${SCRIPT_PATH}/check_extensions.sh"
@@ -87,11 +92,6 @@ ADD --chown=root:root ${GITHUB_RAW}/scripts/entrypoint.sh "${SCRIPT_PATH}/entryp
 ADD --chown=nginx:nginx ${GITHUB_RAW}/etc/config.php "/tmp/config.php"
 ADD --chown=nginx:nginx ${GITHUB_RAW}/etc/fastcgi.conf "/etc/nginx/fastcgi.conf"
 ADD --chown=nginx:nginx ${GITHUB_RAW}/etc/nginx.conf "/etc/nginx/http.d/moodle.conf"
-
-# Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
-ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz .
-ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.md5 .
-ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.sha256 .
 
 # By running these commands, you can ensure that the downloaded file
 # has not been corrupted or tampered with during the download process.
