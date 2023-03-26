@@ -5,13 +5,13 @@ export https_proxy=${HTTP_PROXY}
 
 READY_FILE=$(cat moodle/config.php | grep -c "xsendfile = 'X-Accel-Redirect'")
 
-if [ $READY_FILE -eq 0 ]; then
+if [ ! -f /tmp/foo.txt ] || [ $READY_FILE -eq 0 ]; then
 sleep 10
   # See more: https://docs.moodle.org/401/en/Administration_via_command_line#Installation
   exec su-exec nginx php7 moodle/admin/cli/install.php \
     --chmod=2770 \
     --lang=${MOODLE_LANG:-"en"} \
-    --wwwroot=${MOODLE_WWW:-"http://127.0.0.1:8080"} \
+    --wwwroot=${MOODLE_WWW:-"http://localhost:8080"} \
     --dataroot=${MOODLE_DATADIR:-"/var/www/moodledata"} \
     --dbtype=${MOODLE_DB_TYPE:-"pgsql"} \
     --dbhost=${MOODLE_DB_HOST:-"db"} \
