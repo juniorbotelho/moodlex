@@ -65,14 +65,14 @@ ADD --chown=root:root ${GITHUB_RAW}/scripts/configure_socket.sh "${SCRIPT_PATH}/
 ADD --chown=root:root ${GITHUB_RAW}/scripts/extract_moodle.sh "${SCRIPT_PATH}/extract_moodle.sh"
 ADD --chown=root:root ${GITHUB_RAW}/scripts/entrypoint.sh "${SCRIPT_PATH}/entrypoint.sh"
 # Downloading nginx configuration files and fastcgi to PHP handling
-ADD --chown=root:nginx ${GITHUB_RAW}/etc/config.php "/tmp/config.php"
-ADD --chown=root:nginx ${GITHUB_RAW}/etc/fastcgi.conf "/etc/nginx/fastcgi.conf"
-ADD --chown=root:nginx ${GITHUB_RAW}/etc/nginx.conf "/etc/nginx/http.d/moodle.conf"
+ADD --chown=nginx:nginx ${GITHUB_RAW}/etc/config.php "/tmp/config.php"
+ADD --chown=nginx:nginx ${GITHUB_RAW}/etc/fastcgi.conf "/etc/nginx/fastcgi.conf"
+ADD --chown=nginx:nginx ${GITHUB_RAW}/etc/nginx.conf "/etc/nginx/http.d/moodle.conf"
 
 # Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
-ADD --chown=root:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz .
-ADD --chown=root:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.md5 .
-ADD --chown=root:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.sha256 .
+ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz .
+ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.md5 .
+ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.sha256 .
 
 # By running these commands, you can ensure that the downloaded file
 # has not been corrupted or tampered with during the download process.
@@ -92,7 +92,7 @@ RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-40
     sh -c ${SCRIPT_PATH}/configure_socket.sh &&\
     sh -c ${SCRIPT_PATH}/extract_moodle.sh &&\
     # Secure the Moodle files: It is vital that the files are not writeable by the web server user. For example, on Unix/Linux (as root):
-    chown -R root:nginx "/var/www/moodle" &&\
+    chown -R nginx:nginx "/var/www/moodle" &&\
     chmod -R 0755 "/var/www/moodle" &&\
     find "/var/www/moodle" -type f -exec chmod 0644 {} \; &&\
     # IMPORTANT: This directory must NOT be accessible directly via the web. This would be a serious security hole.
@@ -100,17 +100,20 @@ RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-40
     # Moodle will not install. It can go anywhere else convenient.
     # See more: https://docs.moodle.org/401/en/Installing_Moodle
     mkdir "/var/www/moodledata" &&\
-    chown -R root:nginx "/var/www/moodledata" &&\
+    chown -R nginx:nginx "/var/www/moodledata" &&\
     chmod -R 0775 "/var/www/moodledata" &&\
     find "/var/www/moodledata" -type f -exec chmod 0664 {} \; &&\
     php7 "/var/www/moodle/install.php"
 
 # Override max post limit in nginx
-RUN sed -i 's/client_max_body_size = .*/client_max_body_size = 1024M;/' /etc/nginx/nginx.conf
+RUN sed -i 's/user .*/user nginx nginx;/' /etc/nginx/nginx.conf &&\
+    sed -i 's/client_max_body_size .*/client_max_body_size 1024M;/' /etc/nginx/nginx.conf
 
 # Configure PHP-FPM to listen on a Unix socket instead of a TCP port, which is more secure and efficient
-RUN sed -i 's/^\s*listen = .*/listen = \/run\/php7\/php-fpm7.sock/' ${PHP_SOCKET_PATH} &&\
-    sed -i 's/^\s*;\s*listen.owner = .*/listen.owner = root/' ${PHP_SOCKET_PATH} &&\
+RUN sed -i 's/^\s*user = .*/user = nginx/' ${PHP_SOCKET_PATH} &&\
+    sed -i 's/^\s*group = .*/group = nginx/' ${PHP_SOCKET_PATH} &&\
+    sed -i 's/^\s*listen = .*/listen = \/run\/php7\/php-fpm7.sock/' ${PHP_SOCKET_PATH} &&\
+    sed -i 's/^\s*;\s*listen.owner = .*/listen.owner = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.group = .*/listen.group = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.mode = .*/listen.mode = 0660/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*security.limit_extensions = .*/security.limit_extensions = .php/' ${PHP_SOCKET_PATH}
