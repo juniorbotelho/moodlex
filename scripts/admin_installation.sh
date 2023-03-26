@@ -3,7 +3,7 @@ export PATH="/bin:$PATH"
 export http_proxy=${HTTP_PROXY}
 export https_proxy=${HTTP_PROXY}
 
-exec su-exec nginx php7 install.php \
+exec su-exec nginx php7 moodle/admin/cli/install.php \
   --chmod=2770 \
   --lang=${MOODLE_LANG:-"en"} \
   --wwwroot=${MOODLE_WWW:-"http://127.0.0.1:8080"} \
