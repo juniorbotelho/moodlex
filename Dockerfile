@@ -3,12 +3,24 @@ ARG ALPINE_VERSION=3.17
 FROM docker.io/alpine:${ALPINE_VERSION} as Moodle
 WORKDIR "/var/www"
 
+# Customize the environment during both execution and build time by modifying the environment variables added to the container's shell
+# When building your image, make sure to set the 'TZ' environment variable to your desired time zone location, for example 'America/Sao_Paulo'
+# See more: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
+ARG TZ="America/Sao_Paulo"
+ARG HTTP_PROXY=""
+ARG ALPINE_REPOSITORY="http://dl-cdn.alpinelinux.org/alpine/edge/testing"
+ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
+
+# Update package source list
+RUN apk update &&\
+    apk update --repository="${ALPINE_REPOSITORY}" &&\
+    apk add vim nginx openldap-dev --no-cache
+
 # To set up the server, you will need to install necessary packages such as PHP, Nginx, and other packages for general server handling.
 # If a user wants to use a different Moodle version, they can change the ${VERSION} argument inside the Dockerfile
 # See more: https://docs.moodle.org/401/en/Installation_quick_guide
 # See full installation guide: https://docs.moodle.org/401/en/Installing_Moodle
-RUN apk update &&\
-    apk add \
+RUN apk add \
     php7 \
     php7-session \
     php7-xmlreader \
@@ -37,15 +49,7 @@ RUN apk update &&\
     php7-pdo_mysql \
     php7-ldap \
     php7-sockets \
-    php7-fpm --no-cache --repository="http://dl-cdn.alpinelinux.org/alpine/edge/testing"
-
-RUN apk add vim nginx openldap-dev --no-cache
-
-# Customize the environment during both execution and build time by modifying the environment variables added to the container's shell
-# When building your image, make sure to set the 'TZ' environment variable to your desired time zone location, for example 'America/Sao_Paulo'
-# See more: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
-ARG TZ="America/Sao_Paulo"
-ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
+    php7-fpm --no-cache --repository="${ALPINE_REPOSITORY}"
 
 ENV SCRIPT_PATH="/etc/scripts"
 ENV PHP_SOCKET_PATH="/etc/php7/php-fpm.d/www.conf"
