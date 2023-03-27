@@ -20,9 +20,7 @@ if [ ! -f /moodle/config.php ]; then
     --dbpass=${MOODLE_DB_PASSWORD:-"moodlepw"} \
     --non-interactive \
     --skip-database \
-    --agree-license &&\
-    su-exec nginx php7 moodle/admin/cli/upgrade.php &&\
-    su-exec nginx php7 moodle/admin/cli/cron.php -e
+    --agree-license
 fi
 
 if [ ! -f /moodle/config.php ]; then
