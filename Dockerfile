@@ -118,6 +118,18 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     ln -sf /dev/stdout /var/log/nginx/access.log &&\
     ln -sf /dev/stderr /var/log/nginx/error.log
 
+# Moodle environment variables, you can set these envs using composer or terraform output
+ENV MOODLE_LANG=""
+ENV MOODLE_WWW=""
+ENV MOODLE_DATADIR=""
+ENV MOODLE_DB_TYPE=""
+ENV MOODLE_DB_HOST=""
+ENV MOODLE_DB_NAME=""
+ENV MOODLE_DB_USER=""
+ENV MOODLE_DB_PASSWORD=""
+ENV MOODLE_ADMIN_USER=""
+ENV MOODLE_ADMIN_PASSWORD=""
+
 # Docker metadata contains information about the maintainer, such as the name, repository, and support email
 # Please add any necessary information or correct any incorrect information
 # See more: https://docs.docker.com/config/labels-custom-metadata/

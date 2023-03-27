@@ -7,7 +7,9 @@ services:
       - 8080:8080
     environment:
       TZ: America/Sao_Paulo
-      HTTP_PROXY: http://192.168.23.241:44355
+      # HTTP_PROXY: http://192.168.23.241:44355
+      MOODLE_ADMIN_USER: "admin"
+      MOODLE_ADMIN_PASSWORD: "admin"
     restart: unless-stopped
     depends_on:
       db:
@@ -18,10 +20,10 @@ services:
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: moodleroot
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
       MYSQL_DATABASE: moodle
-      MYSQL_USER: moodleuser
-      MYSQL_PASSWORD: moodlepw
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       timeout: 20s
