@@ -34,6 +34,7 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     apk update --no-cache &&\
     apk add \
     vim \
+    curl \
     su-exec \
     nginx \
     openldap-dev \
@@ -67,14 +68,14 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     php7-sockets \
     php7-fpm --no-cache --repository="${ALPINE_REPOSITORY}" &&\
     # Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
-    wget https://download.moodle.org/stable401/moodle-latest-401.tgz &&\
-    wget https://download.moodle.org/stable401/moodle-latest-401.tgz.md5 &&\
-    wget https://download.moodle.org/stable401/moodle-latest-401.tgz.sha256 &&\
+    curl -fSL https://download.moodle.org/stable401/moodle-latest-401.tgz -OL &&\
+    curl -fSL https://download.moodle.org/stable401/moodle-latest-401.tgz.md5 -OL &&\
+    curl -fSL https://download.moodle.org/stable401/moodle-latest-401.tgz.sha256 -OL &&\
     # By running these commands, you can ensure that the downloaded file
     # has not been corrupted or tampered with during the download process.
     echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-401.tgz" | md5sum -c - &&\
     echo "$(grep -oE '[0-9a-f]{64}' moodle-latest-401.tgz.sha256)  moodle-latest-401.tgz" | sha256sum -c - &&\
-    tar -xzf /var/www/moodle-latest-401.tgz &&\
+    tar -xvzf /var/www/moodle-latest-401.tgz &&\
     # This scope changes the ownership and permissions of the Moodle
     # installation directory and moodledata directory.
     # Secure the Moodle files: It is vital that the files are not writeable by the web server user. For example, on Unix/Linux (as root):
