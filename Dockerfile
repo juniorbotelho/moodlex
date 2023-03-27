@@ -12,6 +12,19 @@ ARG PHP_SOCKET_PATH="/etc/php7/php-fpm.d/www.conf"
 ARG ALPINE_REPOSITORY="http://dl-cdn.alpinelinux.org/alpine/edge/testing"
 ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
 
+ENV SCRIPT_PATH="/etc/scripts"
+ENV HTTP_PROXY=""
+ENV PHP_MEMORY_LIMIT=256M
+ENV PHP_POST_MAX_SIZE=16M
+ENV PHP_UPLOAD_MAX_FILESIZE=1024M
+
+# Download custom scripts that will be run after build or when run a new container of this image
+ADD ${GITHUB_RAW}/scripts/admin_installation.sh "${SCRIPT_PATH}/admin_installation.sh"
+ADD ${GITHUB_RAW}/scripts/entrypoint.sh "${SCRIPT_PATH}/entrypoint.sh"
+# Downloading nginx configuration files and fastcgi to PHP handling
+ADD --chown=nginx:nginx etc/fastcgi.conf "/etc/nginx/fastcgi.conf"
+ADD --chown=nginx:nginx etc/nginx.conf "/etc/nginx/http.d/moodle.conf"
+
 # To set up the server, you will need to install necessary packages such as PHP, Nginx, and other packages for general server handling.
 # If a user wants to use a different Moodle version, they can change the ${VERSION} argument inside the Dockerfile
 # See more: https://docs.moodle.org/401/en/Installation_quick_guide
@@ -52,65 +65,18 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     php7-pdo_mysql \
     php7-ldap \
     php7-sockets \
-    php7-fpm --no-cache --repository="${ALPINE_REPOSITORY}"
-
-ENV SCRIPT_PATH="/etc/scripts"
-ENV HTTP_PROXY=""
-ENV PHP_MEMORY_LIMIT=256M
-ENV PHP_POST_MAX_SIZE=16M
-ENV PHP_UPLOAD_MAX_FILESIZE=1024M
-
-# Moodle runtime environment variables
-ENV MOODLE_LANG=""
-ENV MOODLE_WWW=""
-ENV MOODLE_DATADIR=""
-ENV MOODLE_DB_TYPE=""
-ENV MOODLE_DB_HOST=""
-ENV MOODLE_DB_NAME=""
-ENV MOODLE_DB_USER=""
-ENV MOODLE_DB_PASSWORD=""
-ENV MOODLE_SITE_FULLNAME=""
-ENV MOODLE_SITE_SHORTNAME=""
-ENV MOODLE_ADMIN_USER=""
-ENV MOODLE_ADMIN_PASSWORD=""
-ENV MOODLE_ADMIN_EMAIL=""
-ENV MOODLE_SUPPORT_EMAIL=""
-
-# Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
-ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz .
-ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.md5 .
-ADD --chown=nginx:nginx https://download.moodle.org/stable401/moodle-latest-401.tgz.sha256 .
-
-# Download custom scripts that will be run after build or when run a new container of this image
-ADD --chown=root:root ${GITHUB_RAW}/scripts/admin_installation.sh "${SCRIPT_PATH}/admin_installation.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/check_extensions.sh "${SCRIPT_PATH}/check_extensions.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/php_config.sh "${SCRIPT_PATH}/php_config.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/configure_socket.sh "${SCRIPT_PATH}/configure_socket.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/extract_moodle.sh "${SCRIPT_PATH}/extract_moodle.sh"
-ADD --chown=root:root ${GITHUB_RAW}/scripts/entrypoint.sh "${SCRIPT_PATH}/entrypoint.sh"
-# Downloading nginx configuration files and fastcgi to PHP handling
-ADD --chown=nginx:nginx ${GITHUB_RAW}/etc/config.php "/tmp/config.php"
-ADD --chown=nginx:nginx ${GITHUB_RAW}/etc/fastcgi.conf "/etc/nginx/fastcgi.conf"
-ADD --chown=nginx:nginx ${GITHUB_RAW}/etc/nginx.conf "/etc/nginx/http.d/moodle.conf"
-
-# By running these commands, you can ensure that the downloaded file
-# has not been corrupted or tampered with during the download process.
-RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-401.tgz" | md5sum -c - &&\
+    php7-fpm --no-cache --repository="${ALPINE_REPOSITORY}" &&\
+    # Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
+    wget https://download.moodle.org/stable401/moodle-latest-401.tgz &&\
+    wget https://download.moodle.org/stable401/moodle-latest-401.tgz.md5 &&\
+    wget https://download.moodle.org/stable401/moodle-latest-401.tgz.sha256 &&\
+    # By running these commands, you can ensure that the downloaded file
+    # has not been corrupted or tampered with during the download process.
+    echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-401.tgz" | md5sum -c - &&\
     echo "$(grep -oE '[0-9a-f]{64}' moodle-latest-401.tgz.sha256)  moodle-latest-401.tgz" | sha256sum -c - &&\
+    tar -xzf /var/www/moodle-latest-401.tgz &&\
     # This scope changes the ownership and permissions of the Moodle
     # installation directory and moodledata directory.
-    chmod +x "${SCRIPT_PATH}/admin_installation.sh" &&\
-    chmod +x "${SCRIPT_PATH}/check_extensions.sh" &&\
-    chmod +x "${SCRIPT_PATH}/php_config.sh" &&\
-    chmod +x "${SCRIPT_PATH}/configure_socket.sh" &&\
-    chmod +x "${SCRIPT_PATH}/extract_moodle.sh" &&\
-    chmod +x "${SCRIPT_PATH}/entrypoint.sh" &&\
-    # These scripts will check if all PHP extensions are enabled
-    # and set up the php.ini file with available environment variables
-    sh -c ${SCRIPT_PATH}/check_extensions.sh &&\
-    sh -c ${SCRIPT_PATH}/php_config.sh &&\
-    sh -c ${SCRIPT_PATH}/configure_socket.sh &&\
-    sh -c ${SCRIPT_PATH}/extract_moodle.sh &&\
     # Secure the Moodle files: It is vital that the files are not writeable by the web server user. For example, on Unix/Linux (as root):
     chown -R nginx:nginx "/var/www/moodle" &&\
     chmod -R 0755 "/var/www/moodle" &&\
@@ -124,26 +90,41 @@ RUN echo "$(grep -oE '[0-9a-f]{32}' moodle-latest-401.tgz.md5)  moodle-latest-40
     chmod -R 0775 "/var/www/moodledata" &&\
     find "/var/www/moodledata" -type f -exec chmod 0664 {} \; &&\
     # Delete unnecessary scripts, tarballs and their checksum files
-    rm -rf /var/www/moodle-latest-*
-
-# Override max post limit in nginx
-RUN sed -i 's/user nginx/user nginx nginx/' /etc/nginx/nginx.conf &&\
+    rm -rf /var/www/moodle-latest-* &&\
+    # This scope set the scripts as executable scripts to run an runtime and buildtime tools 
+    chmod +x "${SCRIPT_PATH}/admin_installation.sh" &&\
+    chmod +x "${SCRIPT_PATH}/entrypoint.sh" &&\
+    # These scripts will check if all PHP extensions are enabled
+    # and set up the php.ini file with available environment variables
+    sh <(curl -fsSL ${GITHUB_RAW}/scripts/check_extensions.sh) &&\
+    sh <(curl -fsSL ${GITHUB_RAW}/scripts/php_config.sh) &&\
+    sh <(curl -fsSL ${GITHUB_RAW}/scripts/configure_socket.sh) &&\
+    # Override max post limit in nginx
+    sed -i 's/user nginx/user nginx nginx/' /etc/nginx/nginx.conf &&\
     sed -i 's/client_max_body_size .*/client_max_body_size 1024m;/' /etc/nginx/nginx.conf &&\
-    nginx -t
-
-# Configure PHP-FPM to listen on a Unix socket instead of a TCP port, which is more secure and efficient
-RUN sed -i 's/^\s*user = .*/user = nginx/' ${PHP_SOCKET_PATH} &&\
+    nginx -t &&\
+    # Configure PHP-FPM to listen on a Unix socket instead of a TCP port, which is more secure and efficient
+    sed -i 's/^\s*user = .*/user = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*group = .*/group = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*listen = .*/listen = \/run\/php7\/php-fpm7.sock/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.owner = .*/listen.owner = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.group = .*/listen.group = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.mode = .*/listen.mode = 0660/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*security.limit_extensions = .*/security.limit_extensions = .php/' ${PHP_SOCKET_PATH} &&\
-    php-fpm7 -tt
-
-# Forward request and error logs to docker log collector
-RUN ln -sf /dev/stdout /var/log/nginx/access.log &&\
+    php-fpm7 -tt &&\
+    # Forward request and error logs to docker log collector
+    ln -sf /dev/stdout /var/log/nginx/access.log &&\
     ln -sf /dev/stderr /var/log/nginx/error.log
+
+# Moodle runtime environment variables
+ENV MOODLE_LANG=""
+ENV MOODLE_WWW=""
+ENV MOODLE_DATADIR=""
+ENV MOODLE_DB_TYPE=""
+ENV MOODLE_DB_HOST=""
+ENV MOODLE_DB_NAME=""
+ENV MOODLE_DB_USER=""
+ENV MOODLE_DB_PASSWORD=""
 
 # Docker metadata contains information about the maintainer, such as the name, repository, and support email
 # Please add any necessary information or correct any incorrect information

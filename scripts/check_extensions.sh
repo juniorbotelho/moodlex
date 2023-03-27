@@ -23,7 +23,7 @@ extensions="
   intl
   json
   pgsql
-  mysqli
+  mysqlnd
   pdo_pgsql
   pdo_mysql
   ldap
