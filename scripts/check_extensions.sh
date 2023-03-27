@@ -22,9 +22,7 @@ extensions="
   xml
   intl
   json
-  pgsql
-  mysqlnd
-  pdo_pgsql
+  mysqli
   pdo_mysql
   ldap
   sockets

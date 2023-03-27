@@ -60,10 +60,8 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     php7-xml \
     php7-intl \
     php7-json \
-    php7-sqlite3 \
     php7-mysqli \
     php7-pdo_mysql \
-    php7-pdo_sqlite \
     php7-ldap \
     php7-sockets \
     php7-fpm --no-cache --repository="${ALPINE_REPOSITORY}"
