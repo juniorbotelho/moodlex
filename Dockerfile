@@ -60,14 +60,17 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     php7-xml \
     php7-intl \
     php7-json \
-    php7-pgsql \
+    php7-sqlite3 \
     php7-mysqli \
-    php7-pdo_pgsql \
     php7-pdo_mysql \
+    php7-pdo_sqlite \
     php7-ldap \
     php7-sockets \
-    php7-fpm --no-cache --repository="${ALPINE_REPOSITORY}" &&\
-    # Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
+    php7-fpm --no-cache --repository="${ALPINE_REPOSITORY}"
+
+# Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
+RUN export http_proxy=${HTTP_PROXY} &&\
+    export https_proxy=${HTTP_PROXY} &&\
     curl -fSL https://download.moodle.org/stable401/moodle-latest-401.tgz -OL &&\
     curl -fSL https://download.moodle.org/stable401/moodle-latest-401.tgz.md5 -OL &&\
     curl -fSL https://download.moodle.org/stable401/moodle-latest-401.tgz.sha256 -OL &&\
@@ -116,16 +119,6 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     # Forward request and error logs to docker log collector
     ln -sf /dev/stdout /var/log/nginx/access.log &&\
     ln -sf /dev/stderr /var/log/nginx/error.log
-
-# Moodle runtime environment variables
-ENV MOODLE_LANG=""
-ENV MOODLE_WWW=""
-ENV MOODLE_DATADIR=""
-ENV MOODLE_DB_TYPE=""
-ENV MOODLE_DB_HOST=""
-ENV MOODLE_DB_NAME=""
-ENV MOODLE_DB_USER=""
-ENV MOODLE_DB_PASSWORD=""
 
 # Docker metadata contains information about the maintainer, such as the name, repository, and support email
 # Please add any necessary information or correct any incorrect information

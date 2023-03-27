@@ -7,14 +7,7 @@ services:
       - 8080:8080
     environment:
       TZ: America/Sao_Paulo
-      HTTP_PROXY: http://192.168.237.15:44355
-      # Moodle environment variables
-      MOODLE_LANG: pt_br
-      MOODLE_DB_TYPE: mysqli
-      MOODLE_DB_HOST: db
-      MOODLE_DB_NAME: moodle
-      MOODLE_DB_USER: moodleuser
-      MOODLE_DB_PASSWORD: moodlepw
+      HTTP_PROXY: http://192.168.23.241:44355
     restart: unless-stopped
     depends_on:
       db:
