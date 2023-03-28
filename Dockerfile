@@ -33,7 +33,6 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     export https_proxy=${HTTP_PROXY} &&\
     apk update --no-cache &&\
     apk add \
-    vim \
     curl \
     su-exec \
     nginx \
