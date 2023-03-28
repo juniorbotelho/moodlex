@@ -10,6 +10,6 @@ terraform {
 }
 
 provider "aws" {
-  profile = "moodle"
+  profile = "default"
   region  = "us-east-1"
 }
