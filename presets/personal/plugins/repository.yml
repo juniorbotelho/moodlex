@@ -1,0 +1,6 @@
+version: "3.1"
+available:
+  repository:
+    - url: https://moodle.org/plugins/download.php/27522/repository_s3bucket_moodle40_2022090902.zip
+      sha256sum: 4f517dd0ae130f11118bd68bea8285bb7014b90aefb06833a44c19a4f3df3594
+      md5sum: a95fce2d817c9bc1f47d510624d3750f

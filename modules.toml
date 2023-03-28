@@ -1,0 +1,10 @@
+[preset]
+name = "personal"
+enable = false
+
+[repositories]
+s3 = true
+
+[lambda]
+generate_checksum = true
+playlist_stream = true
