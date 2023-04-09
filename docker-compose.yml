@@ -1,13 +1,14 @@
 version: "3.1"
 services:
   moodle:
-    image: moodle:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: moodle
     ports:
       - 8080:8080
     environment:
       TZ: America/Sao_Paulo
-      # HTTP_PROXY: http://192.168.23.241:44355
       MOODLE_ADMIN_USER: "admin"
       MOODLE_ADMIN_PASSWORD: "admin"
     restart: unless-stopped

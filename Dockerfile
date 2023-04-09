@@ -8,8 +8,7 @@ WORKDIR "/var/www"
 # See more: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
 ARG TZ="America/Sao_Paulo"
 ARG HTTP_PROXY=""
-ARG PHP_SOCKET_PATH="/etc/php7/php-fpm.d/www.conf"
-ARG ALPINE_REPOSITORY="http://dl-cdn.alpinelinux.org/alpine/edge/testing"
+ARG PHP_SOCKET_PATH="/etc/php8/php-fpm.d/www.conf"
 ARG GITHUB_RAW="https://raw.githubusercontent.com/juniorbotelho/moodle/main"
 
 ENV SCRIPT_PATH="/etc/scripts"
@@ -37,33 +36,33 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     su-exec \
     nginx \
     openldap-dev \
-    php7 \
-    php7-session \
-    php7-xmlreader \
-    php7-fileinfo \
-    php7-sodium \
-    php7-exif \
-    php7-opcache \
-    php7-iconv \
-    php7-mbstring \
-    php7-curl \
-    php7-openssl \
-    php7-tokenizer \
-    php7-xmlrpc \
-    php7-soap \
-    php7-ctype \
-    php7-zip \
-    php7-gd \
-    php7-simplexml \
-    php7-dom \
-    php7-xml \
-    php7-intl \
-    php7-json \
-    php7-mysqli \
-    php7-pdo_mysql \
-    php7-ldap \
-    php7-sockets \
-    php7-fpm --no-cache --repository="${ALPINE_REPOSITORY}"
+    php8 \
+    php8-session \
+    php8-xmlreader \
+    php8-fileinfo \
+    php8-sodium \
+    php8-exif \
+    php8-opcache \
+    php8-iconv \
+    php8-mbstring \
+    php8-curl \
+    php8-openssl \
+    php8-tokenizer \
+    php8-pecl-xmlrpc \
+    php8-soap \
+    php8-ctype \
+    php8-zip \
+    php8-gd \
+    php8-simplexml \
+    php8-dom \
+    php8-xml \
+    php8-intl \
+    php8-json \
+    php8-mysqli \
+    php8-pdo_mysql \
+    php8-ldap \
+    php8-sockets \
+    php8-fpm --no-cache --repository="http://dl-cdn.alpinelinux.org/alpine/edge/testing"
 
 # Download the official Moodle tarball and its corresponding MD5 and SHA256 checksum files from moodle.org
 RUN export http_proxy=${HTTP_PROXY} &&\
@@ -107,12 +106,12 @@ RUN export http_proxy=${HTTP_PROXY} &&\
     # Configure PHP-FPM to listen on a Unix socket instead of a TCP port, which is more secure and efficient
     sed -i 's/^\s*user = .*/user = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*group = .*/group = nginx/' ${PHP_SOCKET_PATH} &&\
-    sed -i 's/^\s*listen = .*/listen = \/run\/php7\/php-fpm7.sock/' ${PHP_SOCKET_PATH} &&\
+    sed -i 's/^\s*listen = .*/listen = \/run\/php8\/php-fpm8.sock/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.owner = .*/listen.owner = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.group = .*/listen.group = nginx/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*listen.mode = .*/listen.mode = 0660/' ${PHP_SOCKET_PATH} &&\
     sed -i 's/^\s*;\s*security.limit_extensions = .*/security.limit_extensions = .php/' ${PHP_SOCKET_PATH} &&\
-    php-fpm7 -tt &&\
+    php-fpm8 -tt &&\
     # Forward request and error logs to docker log collector
     ln -sf /dev/stdout /var/log/nginx/access.log &&\
     ln -sf /dev/stderr /var/log/nginx/error.log

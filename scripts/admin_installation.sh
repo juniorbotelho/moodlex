@@ -10,7 +10,7 @@ random_admin_password = $(tr -dc A-Za-z0-9 </dev/urandom | head -c 16 ; echo '')
 
 if [ ! -f /moodle/config.php ]; then
   # See more: https://docs.moodle.org/401/en/Administration_via_command_line#Installation
-  su-exec nginx php7 moodle/admin/cli/install.php \
+  su-exec nginx php8 moodle/admin/cli/install.php \
     --lang=${MOODLE_LANG:-"en"} \
     --wwwroot=${MOODLE_WWW:-"http://localhost:8080"} \
     --dataroot=${MOODLE_DATADIR:-"/var/www/moodledata"} \
