@@ -1,9 +1,7 @@
 version: "3.1"
 services:
   moodle:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: moodle:latest
     container_name: moodle
     ports:
       - 8080:8080
