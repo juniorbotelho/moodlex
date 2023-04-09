@@ -4,11 +4,11 @@
 	"name": "Moodle",
 	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
 	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": { "version": "23.0.3" },
-		"ghcr.io/devcontainers/features/terraform:1": { "version": "1.4.2" },
+		"ghcr.io/devcontainers/features/node:1": { "version": "18.14.0" },
 		"ghcr.io/devcontainers/features/php:1": { "version": "8.1" },
 		"ghcr.io/devcontainers/features/aws-cli:1": { "version": "2.11.4" },
-		"ghcr.io/devcontainers/features/node:1": { "version": "18.14.0" }
+		"ghcr.io/devcontainers/features/terraform:1": { "version": "1.4.2" },
+		"ghcr.io/devcontainers/features/docker-in-docker:2": { "version": "20.10.23" }
 	},
 	"remoteEnv": {
 		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
